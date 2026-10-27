@@ -1,0 +1,20 @@
+[project]
+name = "paper-reading"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "hdj", email = "hudejun2002@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "pillow>=13.0.0",
+    "pymupdf>=2.0",
+]
+
+[project.scripts]
+paper-reading = "paper_reading:main"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
