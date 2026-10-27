@@ -30,44 +30,30 @@ Input: a PDF the user has placed (anywhere findable; usually `resources/bibliogr
 
 Report: the assigned id, created files, tags, and the triage decision with its reason.
 
-### Bundle — build the reading corpus for `<id>`
+### Bundle — build the reading corpus, overview, and bib for `<id>`
 
-Use the paper2skill route of the installed skill (`.agents/skills/paper2agent/paper2skill/`). The bundle is named exactly `<id>`; upstream's name rule (lowercase hyphenated words, ≤63 chars) is satisfied by construction. Steps:
+One command ("bundle <id>") runs the whole pipeline: reading corpus, 研究概述 draft, and the per-paper bib. Use the paper2skill route of the installed skill (`.agents/skills/paper2agent/paper2skill/`). The bundle is named exactly `<id>`; upstream's name rule (lowercase hyphenated words, ≤63 chars) is satisfied by construction. Steps:
 
 1. Take the main PDF and supplements from `resources/bibliography/<id>/`.
 2. Record the start time from the system clock. Run the conversion with the session's current model and reasoning level; do not switch models for the run.
 3. Run the paper2skill workflow with the project interpreter `.venv/bin/python` (it provides pymupdf and pillow): `prepare` (work directory `resources/provenance/<id>/review`, main PDF via `--main`), `extract`, `review-aid`, the multi-agent page review, `build` into `resources/bundles/<id>/`, and `verify --strict`, following the skill's review and verification protocol.
 4. Run the mechanical verification yourself and report its status, `mechanical_ok`, and issues — the build's own report is never a substitute.
 5. Write `resources/provenance/<id>/run.json` with exactly these fields: `schema_version` (integer `1`), `provider` (channel name or `null`), `model` and `reasoning_level` (strings), `started_at` and `finished_at` (UTC ISO-8601), `elapsed_seconds` (integer), `outcome` (`verified` or `failed`), `verification_status` (reported status or `null`). Fill model fields from what actually ran.
-6. If `bundles/<id>/` already exists and the current source SHA-256 hashes match the provenance inventory, reuse it: confirm its verification status instead of rebuilding.
+6. If `bundles/<id>/` already exists and the current source SHA-256 hashes match the provenance inventory, reuse it: confirm its verification status instead of rebuilding, then continue with steps 7–9 on the existing corpus.
+7. Draft the 研究概述: read the bundle's `references/index.md`, then only the passages needed. Update `resources/reviews/<id>.md`, preserving existing frontmatter and content. Draft only `研究概述` — `背景`, `问题`, `思路`, `结论` — each one short paragraph, grounded in the source, with source anchors (sections, figures, tables) in parentheses at the paragraph end. Mark interpretations as the reader's. Drafts are 粗稿: honest and short rather than complete. Keep `文献要点` present; preserve any existing notes.
+8. Build the per-paper bib: read the verbatim REFERENCES section in the bundle's `references/paper.md` (it is the ground truth). Write the self entry first: key `<author><YYYY><serial-letter>` (e.g. `sunoj2022a`), with title, authors, journal, year, volume, pages, and DOI; fill fields from the source PDF's first page and resolve the DOI via Crossref when absent. Write one entry per cited reference: key `<author><YYYY>-ref-<N>` matching the reference number; transcribe the printed entry and add DOI via Crossref only when the match is unambiguous. Run a reference verification pass (the nature-ref-verifier skill, or an equivalent Crossref field comparison) over every entry; fix mismatches against the printed text, and drop uncertain DOIs rather than guess. When the bib and the bundle's verbatim REFERENCES disagree, the bundle wins.
+9. Run `.venv/bin/python scripts/bib-aggregate.py`, `.venv/bin/python scripts/tag-index.py`, and `.venv/bin/python scripts/md-lint.py resources/reviews/<id>.md`; fix every reported violation.
 
-Report: bundle path, elapsed time, verification status, limitations. Do not modify anything under `resources/bibliography/<id>/`.
-
-### Review — draft the 研究概述 for `<id>`
-
-1. Read the bundle's `references/index.md`, then only the passages needed for the overview.
-2. Create or update `resources/reviews/<id>.md`, preserving existing frontmatter and any existing content.
-3. Draft only `研究概述` — `背景`, `问题`, `思路`, `结论` — each one short paragraph, grounded in the source, with source anchors (sections, figures, tables) in parentheses at the paragraph end. Mark interpretations as the reader's. Drafts are 粗稿: honest and short rather than complete.
-4. Keep `文献要点` present but empty in new drafts.
-
-Run `.venv/bin/python scripts/md-lint.py resources/reviews/<id>.md` before delivering; fix every reported violation.
+Report: bundle path, elapsed time, verification status, limitations, and the review draft path. Do not modify anything under `resources/bibliography/<id>/`.
 
 ### Q&A and notes — read against a bundle
+
+This is the long-term usage mode after bundling; the user asks freely and the assistant works against the corpus.
 
 - Read bundles by bounded search: `rg -n` to locate a heading or term, then read 30–60 lines around the hit; never load a whole document to answer a question.
 - Cite the section, figure, or table for every claim pulled from a bundle; quote numbers exactly as transcribed.
 - Distinguish the paper's reported findings from interpretation; interpretations stay clearly marked as the reader's.
 - When the discussion produces a fact worth keeping, append it to the review's `文献要点`: one `### <要点标题>` block per fact — one short paragraph stating the fact, then a `出处` line citing section, figure, table, or page, with a relative link into the bundle's `references/paper.md` or a DOI link. One note = one fact; split compound observations. Never write a note whose evidence you have not located and read. Update the frontmatter `status` tag on the first note (`status:reading`) and refresh `updated`. Run md-lint before delivering.
-
-### Bib — build the per-paper bib for `<id>`
-
-1. Read the verbatim REFERENCES section in the bundle's `references/paper.md`; it is the ground truth.
-2. Write the self entry first: key `<author><YYYY><serial-letter>` (e.g. `sunoj2022a`), with title, authors, journal, year, volume, pages, and DOI. Fill fields from the source PDF's first page; resolve the DOI via Crossref when absent from the paper.
-3. Write one entry per cited reference: key `<author><YYYY>-ref-<N>` matching the reference number. Transcribe the printed entry; add DOI via Crossref only when the match is unambiguous.
-4. Run a reference verification pass (the nature-ref-verifier skill, or an equivalent Crossref field comparison) over every entry; fix mismatches against the printed text, and drop uncertain DOIs rather than guess.
-5. Run `.venv/bin/python scripts/bib-aggregate.py` and `.venv/bin/python scripts/tag-index.py`.
-
-When the bib and the bundle's verbatim REFERENCES disagree, the bundle wins. Cited-reference entries stay in the per-paper bib; the aggregate carries self entries alone.
 
 ### Session init — realign with the library
 

@@ -30,11 +30,10 @@ paper-reading/
 
 ## How to use
 
-You normally just talk to the assistant in this directory. The workflows live in `AGENTS.md`; four commands cover them:
+You normally just talk to the assistant in this directory. The workflows live in `AGENTS.md`; three commands cover them:
 
-- **Intake a new paper** (place the PDF, then say "triage this paper"): the assistant reads the PDF's abstract, assigns an id, creates `bibliography/<id>/` with renamed sources, writes the review stub `reviews/<id>.md` (tags, one-line triage decision: bundle or hold), and a bib stub when the DOI is known.
-- **Build the reading corpus** (say "bundle <id>"): runs the paper2skill conversion (~an hour of agent time), producing `bundles/<id>/` (searchable full text + figure/table assets) and `provenance/<id>/run.json`. Only verified bundles are used for reading.
-- **First read** (say "review <id>"): drafts the research overview (in Chinese as the notes' working language) into the review file from the bundle.
+- **Intake a new paper** (place the PDF, then say "triage this paper"): the assistant reads the PDF's abstract, assigns an id, creates `bibliography/<id>/` with renamed sources, and writes the review stub `reviews/<id>.md` (tags, one-line triage decision: bundle or hold) plus a bib stub when the DOI is known.
+- **Bundle and read** (say "bundle <id>"): runs the full pipeline — the paper2skill conversion (~an hour of agent time) producing `bundles/<id>/` (searchable full text + figure/table assets) and `provenance/<id>/run.json`, then the Chinese research overview draft, then the per-paper bib with verified references, then regenerating `references.bib` and `TAGS.md`.
 - **Daily Q&A** (just ask, e.g. "what is the Set-2 RMSE in <id>?"): the assistant searches the bundle, reads the relevant passage, and answers with section/figure/table anchors; confirmed facts get appended to the review.
 
 Maintenance scripts (see below): regenerate the aggregate bib and tag index, check markdown formatting.
