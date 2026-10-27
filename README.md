@@ -17,6 +17,8 @@ paper-reading/
 │   ├── provenance/         # Build records: <id>/run.json + review evidence
 │   └── reviews/            # Reading notes: <id>.md (the human-read layer) + TEMPLATE.md
 ├── scripts/                # bib-aggregate.py, tag-index.py, md-lint.py
+├── pyproject.toml          # uv-managed dependencies for the bundling toolchain
+├── .venv/                  # uv virtual environment (not a package; tooling deps only)
 └── .agents/skills/         # Installed paper2agent skill (Paper2Skill route)
 ```
 
@@ -39,9 +41,11 @@ Maintenance scripts (see below): regenerate the aggregate bib and tag index, che
 
 ## Maintenance
 
-- `python3 scripts/bib-aggregate.py` — regenerate `references.bib` from per-paper bibs; fails on duplicate keys or DOIs (`--check` verifies only).
-- `python3 scripts/tag-index.py` — regenerate `TAGS.md` from review frontmatter (`--check` verifies only).
-- `python3 scripts/md-lint.py` — check markdown for hard-wrapped prose; run before delivering any new markdown.
+Dependencies (pymupdf, pillow, pypdf — used by the bundling toolchain) are managed with uv: `uv add <pkg>` / `uv remove <pkg>`; the environment is `.venv/` and this is a dependency-only project, not an installable package. Maintenance scripts:
+
+- `.venv/bin/python scripts/bib-aggregate.py` — regenerate `references.bib` from per-paper bibs; fails on duplicate keys or DOIs (`--check` verifies only).
+- `.venv/bin/python scripts/tag-index.py` — regenerate `TAGS.md` from review frontmatter (`--check` verifies only).
+- `.venv/bin/python scripts/md-lint.py` — check markdown for hard-wrapped prose; run before delivering any new markdown.
 
 ## Status
 

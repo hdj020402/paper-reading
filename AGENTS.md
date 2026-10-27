@@ -36,7 +36,7 @@ Use the paper2skill route of the installed skill (`.agents/skills/paper2agent/pa
 
 1. Take the main PDF and supplements from `resources/bibliography/<id>/`.
 2. Record the start time from the system clock. Run the conversion with the session's current model and reasoning level; do not switch models for the run.
-3. Run the paper2skill workflow: `prepare` (work directory `resources/provenance/<id>/review`, main PDF via `--main`), `extract`, `review-aid`, the multi-agent page review, `build` into `resources/bundles/<id>/`, and `verify --strict`, following the skill's review and verification protocol.
+3. Run the paper2skill workflow with the project interpreter `.venv/bin/python` (it provides pymupdf and pillow): `prepare` (work directory `resources/provenance/<id>/review`, main PDF via `--main`), `extract`, `review-aid`, the multi-agent page review, `build` into `resources/bundles/<id>/`, and `verify --strict`, following the skill's review and verification protocol.
 4. Run the mechanical verification yourself and report its status, `mechanical_ok`, and issues — the build's own report is never a substitute.
 5. Write `resources/provenance/<id>/run.json` with exactly these fields: `schema_version` (integer `1`), `provider` (channel name or `null`), `model` and `reasoning_level` (strings), `started_at` and `finished_at` (UTC ISO-8601), `elapsed_seconds` (integer), `outcome` (`verified` or `failed`), `verification_status` (reported status or `null`). Fill model fields from what actually ran.
 6. If `bundles/<id>/` already exists and the current source SHA-256 hashes match the provenance inventory, reuse it: confirm its verification status instead of rebuilding.
@@ -50,7 +50,7 @@ Report: bundle path, elapsed time, verification status, limitations. Do not modi
 3. Draft only `研究概述` — `背景`, `问题`, `思路`, `结论` — each one short paragraph, grounded in the source, with source anchors (sections, figures, tables) in parentheses at the paragraph end. Mark interpretations as the reader's. Drafts are 粗稿: honest and short rather than complete.
 4. Keep `文献要点` present but empty in new drafts.
 
-Run `python3 scripts/md-lint.py resources/reviews/<id>.md` before delivering; fix every reported violation.
+Run `.venv/bin/python scripts/md-lint.py resources/reviews/<id>.md` before delivering; fix every reported violation.
 
 ### Q&A and notes — read against a bundle
 
@@ -65,7 +65,7 @@ Run `python3 scripts/md-lint.py resources/reviews/<id>.md` before delivering; fi
 2. Write the self entry first: key `<author><YYYY><serial-letter>` (e.g. `sunoj2022a`), with title, authors, journal, year, volume, pages, and DOI. Fill fields from the source PDF's first page; resolve the DOI via Crossref when absent from the paper.
 3. Write one entry per cited reference: key `<author><YYYY>-ref-<N>` matching the reference number. Transcribe the printed entry; add DOI via Crossref only when the match is unambiguous.
 4. Run a reference verification pass (the nature-ref-verifier skill, or an equivalent Crossref field comparison) over every entry; fix mismatches against the printed text, and drop uncertain DOIs rather than guess.
-5. Run `python3 scripts/bib-aggregate.py` and `python3 scripts/tag-index.py`.
+5. Run `.venv/bin/python scripts/bib-aggregate.py` and `.venv/bin/python scripts/tag-index.py`.
 
 When the bib and the bundle's verbatim REFERENCES disagree, the bundle wins. Cited-reference entries stay in the per-paper bib; the aggregate carries self entries alone.
 
@@ -75,4 +75,4 @@ At session start: read `README.md`, then `AGENTS.md`; list `resources/reviews/` 
 
 ## Prose rules
 
-One paragraph per line, in any language. Never hard-wrap prose to a fixed width; a line ends only at its paragraph's end. Run `python3 scripts/md-lint.py` before delivering any new or edited markdown.
+One paragraph per line, in any language. Never hard-wrap prose to a fixed width; a line ends only at its paragraph's end. Run `.venv/bin/python scripts/md-lint.py` before delivering any new or edited markdown.
