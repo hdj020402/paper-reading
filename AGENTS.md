@@ -10,7 +10,7 @@ Read `README.md` first for layout, paper identity, and the user-facing commands.
 - **Ids are join keys, never renamed.** `bibliography/<id>/`, `bundles/<id>/`, `provenance/<id>/`, `reviews/<id>.md`, and the BibTeX key must all share the id.
 - **Bundles must be verified.** Use a bundle only when its `provenance/<id>/run.json` reports `verification_status` of `reviewed` or `reviewed_with_limitations`; otherwise it is a draft.
 - **Notes must be anchored.** Every bullet-point note in a review cites its source: main-text section, SI section, page, figure, or table number, linking into the bundle's `references/paper.md` or a DOI.
-- **Generated files are never hand-edited.** `references.bib` and `TAGS.md` are produced by `scripts/`; edit the per-paper sources instead.
+- **Generated files are never hand-edited.** `references.bib` and `resources/TAGS.md` are produced by `scripts/`; edit the per-paper sources instead.
 - **Records state facts, not defaults.** The model and reasoning level in `run.json` describe what actually ran; never copy a model name from documentation or memory into a record.
 
 ## Procedures

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Generate TAGS.md: a tag index over resources/reviews/<id>.md frontmatter.
+"""Generate resources/TAGS.md: a tag index over resources/reviews/<id>.md frontmatter.
 
 Reads each review's YAML frontmatter (id, title, tags), and writes one
-section per tag listing the papers carrying it. TAGS.md is a derived
+section per tag listing the papers carrying it. resources/TAGS.md is a derived
 file: never hand-edit it; edit review frontmatter instead.
 
 Usage: python3 scripts/tag-index.py [--check]
@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REVIEWS = ROOT / "resources" / "reviews"
-INDEX = ROOT / "TAGS.md"
+INDEX = ROOT / "resources" / "TAGS.md"
 
 
 def parse_frontmatter(path: Path) -> dict[str, str | list[str]]:

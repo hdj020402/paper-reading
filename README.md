@@ -33,7 +33,7 @@ paper-reading/
 You normally just talk to the assistant in this directory. The workflows live in `AGENTS.md`; three commands cover them:
 
 - **Intake a new paper** (place the PDF, then say "triage this paper"): the assistant reads the PDF's abstract, assigns an id, creates `bibliography/<id>/` with renamed sources, and writes the review stub `reviews/<id>.md` (tags, one-line triage decision: bundle or hold) plus a bib stub when the DOI is known.
-- **Bundle and read** (say "bundle <id>"): runs the full pipeline — the paper2skill conversion (~an hour of agent time) producing `bundles/<id>/` (searchable full text + figure/table assets) and `provenance/<id>/run.json`, then the Chinese research overview draft, then the per-paper bib with verified references, then regenerating `references.bib` and `TAGS.md`.
+- **Bundle and read** (say "bundle <id>"): runs the full pipeline — the paper2skill conversion (~an hour of agent time) producing `bundles/<id>/` (searchable full text + figure/table assets) and `provenance/<id>/run.json`, then the Chinese research overview draft, then the per-paper bib with verified references, then regenerating `references.bib` and `resources/TAGS.md`.
 - **Daily Q&A** (just ask, e.g. "what is the Set-2 RMSE in <id>?"): the assistant searches the bundle, reads the relevant passage, and answers with section/figure/table anchors; confirmed facts get appended to the review.
 
 Maintenance scripts (see below): regenerate the aggregate bib and tag index, check markdown formatting.
@@ -43,7 +43,7 @@ Maintenance scripts (see below): regenerate the aggregate bib and tag index, che
 Dependencies (pymupdf, pillow, pypdf — used by the bundling toolchain) are managed with uv: `uv add <pkg>` / `uv remove <pkg>`; the environment is `.venv/` and this is a dependency-only project, not an installable package. Maintenance scripts:
 
 - `.venv/bin/python scripts/bib-aggregate.py` — regenerate `references.bib` from per-paper bibs; fails on duplicate keys or DOIs (`--check` verifies only).
-- `.venv/bin/python scripts/tag-index.py` — regenerate `TAGS.md` from review frontmatter (`--check` verifies only).
+- `.venv/bin/python scripts/tag-index.py` — regenerate `resources/TAGS.md` from review frontmatter (`--check` verifies only).
 - `.venv/bin/python scripts/md-lint.py` — check markdown for hard-wrapped prose; run before delivering any new markdown.
 
 ## Status
