@@ -25,9 +25,14 @@ Rules (deliberate conservatism):
   parsed. Enable with --crossref.
 
 Usage:
-  .venv/bin/python scripts/bib-parse.py resources/bibliography/<id>/<id>.bib
-  .venv/bin/python scripts/bib-parse.py <file> --crossref [--write]
-Without --write, prints a report and writes nothing.
+  .venv/bin/python scripts/bib-parse.py resources/bibliography/<id>/<id>.bib \
+      --from-bundle resources/bundles/<id> [--crossref] [--write]
+  .venv/bin/python scripts/bib-parse.py <bib-file> [--crossref] [--write]  (re-run on existing transcriptions)
+With --from-bundle, the transcription step runs first: the REFERENCES section
+of the bundle's references/paper.md is copied verbatim into the bib as
+`@misc` transcription entries (self entry must already exist and is kept),
+then structured. Without it, existing transcription entries are re-parsed
+idempotently. Without --write, prints a report and writes nothing.
 """
 
 from __future__ import annotations
@@ -268,14 +273,80 @@ def format_entry(key: str, entry: dict[str, str], raw: str, old_extra: str) -> s
     return "\n".join(lines)
 
 
+def extract_bundle_refs(paper_md: Path) -> dict[int, str]:
+    """Copy the printed REFERENCES list from a bundle's paper.md verbatim.
+
+    Returns {reference number: raw transcribed line}. The numbering follows
+    the printed list; entries are split at line starts and at inline
+    "N. " boundaries (some PDF transcriptions merge two entries on a line).
+    """
+    text = paper_md.read_text(encoding="utf-8")
+    m = re.search(r"^#{1,6} (?:\*\*)?[Rr]eferences(?:\*\*)?\s*$", text, re.M)
+    if not m:
+        raise ValueError(f"No REFERENCES section found in {paper_md}")
+    refs = text[m.end():]
+    # Stop at the next top-level section after the references, if any.
+    stop = re.search(r"^#{1,2} (?!#).*\S.*$", refs, re.M)
+    if stop:
+        refs = refs[: stop.start()]
+    items = re.split(r"(?:(?<=\n)|(?<=\. ))(?=\d+\.\s)", refs)
+    entries: dict[int, str] = {}
+    for it in items:
+        mm = re.match(r"^(\d+)\.\s+(.+?)(?=(?:\n\n)|(?:\n\d+\.)|\Z)", it, re.S)
+        if mm:
+            entries[int(mm.group(1))] = " ".join(mm.group(2).split())
+    if not entries:
+        raise ValueError(f"REFERENCES section in {paper_md} has no numbered entries")
+    return entries
+
+
+def transcribe_into_bib(bib: Path, self_key: str, refs: dict[int, str]) -> str:
+    """Write transcription entries for the references into the bib file.
+
+    Keeps any existing content (the self entry, existing structured or
+    transcription entries) and appends only the missing -ref-N entries.
+    Returns the new file text.
+    """
+    text = bib.read_text(encoding="utf-8") if bib.is_file() else ""
+    blocks = [b for b in re.split(r"\n\s*\n", text) if b.strip()]
+    existing_keys = set(re.findall(r"@\w+\{(\S+?),", text))
+    added = []
+    for num in sorted(refs):
+        key = f"{self_key}-ref-{num}"
+        if key in existing_keys:
+            continue
+        added.append(
+            f"@misc{{{key},\n  note = {{Transcribed from the printed REFERENCES of {self_key}: {refs[num]}}},\n}}"
+        )
+    if added:
+        blocks.extend(added)
+    return "\n\n".join(b.strip() for b in blocks) + "\n"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("bib", type=Path, help="per-paper bib file to parse")
+    parser.add_argument("--from-bundle", type=Path, metavar="BUNDLE",
+                        help="transcribe the REFERENCES section of BUNDLE/references/paper.md into the bib first")
     parser.add_argument("--crossref", action="store_true", help="complete empty fields via Crossref by DOI")
     parser.add_argument("--write", action="store_true", help="rewrite the file; default is a dry run")
     args = parser.parse_args()
 
-    text = args.bib.read_text(encoding="utf-8")
+    # Ref keys build on the self entry's key (e.g. kraka2024a -> kraka2024a-ref-3),
+    # not the file stem: the self entry is written by the agent and is the
+    # key the aggregate and citations use.
+    existing = re.findall(r"@\w+\{(\S+?),", args.bib.read_text(encoding="utf-8")) if args.bib.is_file() else []
+    ref_candidates = [k for k in existing if "-ref-" not in k]
+    if not ref_candidates:
+        raise ValueError(f"{args.bib}: no self entry found — write it first (key like sunoj2022a)")
+    self_key = ref_candidates[0]
+    if args.from_bundle:
+        refs = extract_bundle_refs(args.from_bundle / "references" / "paper.md")
+        text = transcribe_into_bib(args.bib, self_key, refs)
+        print(f"Transcribed {len(refs)} printed references from {args.from_bundle.name}")
+    else:
+        refs = {}
+        text = args.bib.read_text(encoding="utf-8")
     entries = re.findall(r"@misc\{[^@]*?\n\}", text, re.DOTALL)
     out_parts: list[str] = []
     stats = {"parsed": 0, "unparsed": 0, "completed": 0, "conflicts": 0}

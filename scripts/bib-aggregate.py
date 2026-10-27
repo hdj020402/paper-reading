@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BIBLIOGRAPHY = ROOT / "resources" / "bibliography"
 AGGREGATE = BIBLIOGRAPHY / "references.bib"
 
-CITED_REF_KEY = re.compile(r"^[a-z0-9]+-ref-\d+$", re.IGNORECASE)
+CITED_REF_KEY = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*-ref-\d+$", re.IGNORECASE)
 ENTRY_KEY = re.compile(r"^@\w+\{([^,\s]+),", re.MULTILINE)
 DOI_FIELD = re.compile(r'^\s*doi\s*=\s*[{"]([^}"]+)[}"]', re.MULTILINE | re.IGNORECASE)
 
