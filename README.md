@@ -15,7 +15,7 @@ paper-reading/
 │   │   └── references.bib      # Aggregate of all self entries (generated)
 │   ├── bundles/            # Reading corpora: one <id>/ per bundled paper
 │   ├── provenance/         # Build records: <id>/run.json + review evidence
-│   └── reviews/            # Reading notes: <id>.md (the human-read layer) + TEMPLATE.md
+│   └── reviews/            # Reading notes: <id>.md (the human-read layer) + .TEMPLATE.md
 ├── scripts/                # bib-aggregate.py, tag-index.py, md-lint.py
 ├── pyproject.toml          # uv-managed dependencies for the bundling toolchain
 ├── .venv/                  # uv virtual environment (not a package; tooling deps only)

@@ -59,7 +59,7 @@ def main() -> int:
     papers: list[tuple[str, str]] = []
 
     for review in sorted(REVIEWS.glob("*.md")):
-        if review.name == "TEMPLATE.md":
+        if review.name == ".TEMPLATE.md":
             continue
         fields = parse_frontmatter(review)
         paper_id = str(fields.get("id", ""))
