@@ -8,10 +8,10 @@ line is flagged, except for tables, whose rows all share the pipe
 prefix. Lists, code, headings, blockquotes, comments, and frontmatter
 are exempt.
 
-Usage: python3 scripts/md-lint.py [FILE ...]
-  With files: check those files. Without: check all repository markdown
-  under dev/, docs/, tasks/, README.md, and AGENTS.md (not resources/
-  or .agents/).
+Usage: .venv/bin/python scripts/md-lint.py [FILE ...]
+  With files: check those files. Without: check README.md, AGENTS.md, and
+  every review note under resources/reviews/ (bundle contents and the
+  vendored skill are out of scope).
 """
 
 from __future__ import annotations
@@ -70,8 +70,7 @@ def lint_file(path: Path) -> list[int]:
 
 def default_files() -> list[Path]:
     candidates = [ROOT / "README.md", ROOT / "AGENTS.md"]
-    for sub in ("dev", "docs", "tasks"):
-        candidates.extend(sorted((ROOT / sub).rglob("*.md")))
+    candidates.extend(sorted((ROOT / "resources" / "reviews").glob("*.md")))
     return [p for p in candidates if p.is_file()]
 
 
